@@ -23,6 +23,30 @@ const h = (tag, props, ...kids) => {
   return e;
 };
 const $ = (s, r = document) => r.querySelector(s);
+const IC = {
+  home: '<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+  grupos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/>',
+  agenda: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  materiais: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+  atividades: '<path d="M6 3h8l4 4v14H6z"/><path d="M9 13h6M9 17h6"/>',
+  projetos: '<path d="M4 20V4M4 20h16M8 15l4-4 3 3 5-6"/>',
+  videoaulas: '<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/>',
+  agentes: '<path d="M4 5h16v11H9l-5 4z"/>',
+  feedback: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8"/>',
+  relatorios: '<path d="M5 20V10M12 20V4M19 20v-7"/>',
+  sair: '<path d="M9 4H5v16h4"/><path d="M16 8l4 4-4 4M20 12H9"/>',
+  bell: '<path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4zM10 21h4"/>',
+  acess: '<circle cx="12" cy="5" r="1.8"/><path d="M5 8.5l7 1.5 7-1.5M12 10v5M9 21l3-6 3 6"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+};
+const ico = (name, size = 16, sw = 1.8) => {
+  const d = new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" aria-hidden="true">${IC[name]}</svg>`, 'image/svg+xml').documentElement;
+  return document.importNode(d, true);
+};
+const GRAD = ['linear-gradient(120deg,#B20000,#C20000)', 'linear-gradient(120deg,#005C6D,#2BB8C9)', 'linear-gradient(120deg,#404040,#808080)'];
+const ABR = (iso) => { const [, m, d] = iso.split('-'); return `${d} ${['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'][+m - 1]}`; };
+const gcard = (g, href, label, i, mem) => h('article', { class: 'gc' }, h('div', { class: 'gh', style: 'background:' + GRAD[i % 3] }, ico('grupos', 28, 1.6)),
+  h('div', { class: 'gb' }, h('span', { class: 'chip' + (mem ? ' ok' : '') }, mem ? 'Você participa' : g.status), h('h3', null, g.nome), h('p', { class: 'm' }, `Prof. ${g.professor} · ${ativos(g)} participantes`), h('a', { class: 'btn sm', href }, label)));
 const go = (hash) => { if (location.hash === hash) render(); else location.hash = hash; };
 const fmt = (iso) => { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; };
 const hoje = () => DB.meta.hoje;
@@ -169,7 +193,7 @@ function floaters() {
     holder.append(h('div', { class: 'pan big', role: 'dialog', 'aria-label': 'Assistente' }, h('h3', null, 'Assistente'), log, h('div', { class: 'row', style: 'margin-top:8px' }, quick), form));
     input.focus();
   };
-  wrap.append(h('button', { type: 'button', 'aria-label': 'Abrir painel de acessibilidade', onclick: a11y }, 'A'), h('button', { type: 'button', 'aria-label': 'Abrir assistente', onclick: assist }, '?'));
+  wrap.append(h('button', { type: 'button', 'aria-label': 'Abrir painel de acessibilidade', onclick: a11y }, ico('acess', 20)), h('button', { type: 'button', 'aria-label': 'Abrir assistente', onclick: assist }, ico('chat', 20)));
   return [wrap, holder];
 }
 
@@ -204,9 +228,9 @@ function bell(perfil) {
   const list = DB.notificacoes[perfil] || [];
   const unread = list.filter((n) => !S.read[n.id]).length;
   const box = h('div', { class: 'drop notif', hidden: true });
-  const btn = h('button', { class: 'btn sm bell', type: 'button', 'aria-label': `Notificações (${unread} novas)`, 'aria-expanded': 'false', onclick: () => {
+  const btn = h('button', { class: 'btn ic bell', type: 'button', 'aria-label': `Notificações (${unread} novas)`, 'aria-expanded': 'false', onclick: () => {
     box.hidden = !box.hidden; btn.setAttribute('aria-expanded', String(!box.hidden));
-  } }, 'Notificações', unread ? h('span', { class: 'n' }, unread) : null);
+  } }, ico('bell'), unread ? h('span', { class: 'n' }, unread) : null);
   list.forEach((n) => box.append(h('a', { href: n.rota, onclick: () => { S.read[n.id] = 1; } }, n.texto)));
   if (!list.length) box.append(h('div', null, 'Sem notificações.'));
   return h('div', { style: 'position:relative' }, btn, box);
@@ -216,18 +240,18 @@ function shell(menuKey, crumbs, content, backHref) {
   const menu = aluno ? ALUNO_MENU : PROF_MENU;
   const home = aluno ? '#/aluno' : '#/prof';
   const sb = h('aside', { class: 'sb', id: 'sb', 'aria-label': 'Menu lateral' },
-    h('a', { class: 'lg', href: home, 'aria-label': 'TechFatec — ir para o início', title: 'Ir para o início' }, h('img', { src: 'assets/logo-fatec.png', alt: '' }), h('b', null, 'TechFatec')),
+    h('a', { class: 'lg', href: home, 'aria-label': 'TechFatec — ir para o início', title: 'Ir para o início' }, h('span', { class: 'lgs' }, h('img', { src: 'assets/logo-fatec.png', alt: '' }), h('img', { src: 'assets/logo-cps.png', alt: '' })), h('b', null, 'TechFatec')),
     h('div', { class: 'area' }, aluno ? 'Área do aluno' : 'Área do professor'),
-    h('nav', { 'aria-label': 'Menu principal' }, menu.map((m) => h('a', { class: 'ni' + (m[2] === menuKey ? ' on' : ''), href: m[1], 'aria-current': m[2] === menuKey ? 'page' : null, onclick: () => sb.classList.remove('open') }, h('i'), m[0]))),
+    h('nav', { 'aria-label': 'Menu principal' }, menu.map((m) => h('a', { class: 'ni' + (m[2] === menuKey ? ' on' : ''), href: m[1], 'aria-current': m[2] === menuKey ? 'page' : null, onclick: () => sb.classList.remove('open') }, ico(m[2] === '' ? 'home' : m[2]), m[0]))),
     h('div', { class: 'grow' }),
-    h('button', { class: 'ni exit', type: 'button', onclick: confirmExit }, h('i'), 'Sair da conta'),
-    h('div', { class: 'usr' }, h('div', { class: 'av' }, u.nome[0]), h('div', null, h('b', null, u.nome), h('small', null, aluno ? `Aluno · ${u.curso.split(' ').filter((w) => w[0] === w[0].toUpperCase()).map((w) => w[0]).join('')}` : 'Professor'))));
-  const top = h('header', { class: 'top' }, h('button', { class: 'btn sm menu', type: 'button', 'aria-label': 'Abrir menu', 'aria-controls': 'sb', onclick: () => sb.classList.toggle('open') }, '☰ Menu'), searchBox(u.perfil), bell(u.perfil));
+    h('button', { class: 'ni exit', type: 'button', onclick: confirmExit }, ico('sair'), 'Sair da conta'),
+    h('div', { class: 'usr' }, h('div', { class: 'av' }, u.nome.split(' ').map((w) => w[0]).slice(0, 2).join('')), h('div', null, h('b', null, u.nome), h('small', null, aluno ? `Aluno · ${u.curso.split(' ').filter((w) => w[0] === w[0].toUpperCase()).map((w) => w[0]).join('')}` : 'Professor'))));
+  const top = h('header', { class: 'top' }, h('button', { class: 'btn sm menu', type: 'button', 'aria-label': 'Abrir menu', 'aria-controls': 'sb', onclick: () => sb.classList.toggle('open') }, '☰'), searchBox(u.perfil), bell(u.perfil));
   const main = h('main', { id: 'main', tabindex: '-1' }, crumbNav(crumbs), backHref && h('button', { class: 'back', type: 'button', onclick: () => go(backHref[0]) }, '← ' + backHref[1]), content);
   return [demoBar(), h('div', { class: 'app' }, sb, h('div', { class: 'col' }, top, main)), footer(), ...floaters()];
 }
 function authShell(content) {
-  return [demoBar(), h('div', { class: 'auth' }, h('div', { class: 'box' }, h('div', { class: 'logos' }, h('img', { src: 'assets/logo-fatec.png', alt: 'Fatec São Roque' }), h('img', { src: 'assets/logo-cps.png', alt: 'Centro Paula Souza' }), h('b', null, 'TechFatec')), h('main', { id: 'main', tabindex: '-1' }, content))), footer(), ...floaters()];
+  return [demoBar(), h('div', { class: 'auth' }, h('div', { class: 'box' }, h('div', { class: 'logos' }, h('span', { class: 'lgs' }, h('img', { src: 'assets/logo-fatec.png', alt: 'Fatec São Roque' }), h('img', { src: 'assets/logo-cps.png', alt: 'Centro Paula Souza' })), h('b', null, 'TechFatec')), h('main', { id: 'main', tabindex: '-1' }, content))), footer(), ...floaters()];
 }
 
 /* ---------- acesso ---------- */
@@ -239,12 +263,12 @@ function vLogin() {
   const pass = h('input', { id: 'pw', type: 'password', autocomplete: 'current-password' });
   const rem = h('input', { id: 'rm', type: 'checkbox', style: 'width:auto', checked: !!lembrado });
   const alertBox = h('div', { role: 'alert' });
-  const btn = h('button', { class: 'btn pri', type: 'submit', style: 'width:100%' }, 'Entrar');
+  const btn = h('button', { class: 'btn pri', type: 'submit', style: 'width:100%' }, 'Entrar →');
   const showErr = (t) => alertBox.replaceChildren(h('div', { class: 'alert err' }, t));
   const lockUI = () => {
     const left = Math.ceil((S.lock.until - Date.now()) / 1000);
     if (left > 0) { btn.disabled = true; btn.textContent = `Aguarde... ${left}s`; if (!tick) tick = setInterval(lockUI, 500); }
-    else { btn.disabled = false; btn.textContent = 'Entrar'; clearInterval(tick); tick = null; }
+    else { btn.disabled = false; btn.textContent = 'Entrar →'; clearInterval(tick); tick = null; }
   };
   const form = h('form', { class: 'f', novalidate: true, style: 'max-width:none', onsubmit: (e) => {
     e.preventDefault();
@@ -267,7 +291,7 @@ function vLogin() {
     h('label', { style: 'display:flex;gap:8px;align-items:center;font-weight:400' }, rem, 'Lembrar de mim'), btn);
   const fill = (e, p) => () => { email.value = e; pass.value = p; pass.focus(); };
   const view = authShell([
-    h('h1', null, 'Acesse sua conta'), h('p', { class: 'sub' }, 'Entre com seu e-mail institucional e senha.'), form,
+    h('p', { class: 'eyebrow dk' }, 'Sua jornada acadêmica'), h('h1', null, 'Acesse sua conta'), h('p', { class: 'sub' }, 'Entre com seu e-mail institucional e senha.'), form,
     h('p', null, h('a', { href: '#/recuperar' }, 'Esqueci minha senha')),
     h('p', null, 'Ainda não tem conta? ', h('a', { href: '#/cadastro/aluno' }, 'Cadastro de aluno'), ' · ', h('a', { href: '#/cadastro/professor' }, 'Cadastro de professor')),
     h('div', { class: 'hint' }, h('b', null, 'Dados fictícios para a demonstração'), h('br'), 'Aluno: thiago.santos@fatec.sp.gov.br · Professor: camila.souza@fatec.sp.gov.br · senha demo123.', h('br'), h('div', { class: 'row' }, h('button', { class: 'btn sm', type: 'button', onclick: fill('thiago.santos@fatec.sp.gov.br', 'demo123') }, 'Preencher como aluno'), h('button', { class: 'btn sm', type: 'button', onclick: fill('camila.souza@fatec.sp.gov.br', 'demo123') }, 'Preencher como professor')), h('small', null, 'Em implantação futura, o acesso usará o e-mail e a senha já vinculados à conta da Fatec.'))]);
@@ -300,8 +324,9 @@ function vAlunoInicio() {
   const pend = DB.atividades.filter((a) => !entrega(a));
   const prox = proximos().slice(0, 4);
   return shell('', null, [
-    h('div', { class: 'hero' }, h('p', { class: 'eyebrow', style: 'color:#ddd' }, 'Conteúdo acadêmico'), h('h2', null, `Olá, ${u.nome.split(' ')[0]}.`), h('p', null, 'Continue avançando nos seus estudos.'), h('a', { class: 'btn', href: A + '/atividades' }, 'Ver atividades')),
-    h('div', { class: 'stats' }, [['Grupos', gs.length, A + '/grupos'], ['Compromissos', prox.length, A + '/agenda'], ['Atividades pendentes', pend.length, A + '/atividades'], ['Projetos', DB.projetos.filter((p) => gs.includes((DB.grupos.find((g) => g.nome === p.grupo) || {}).id)).length, A + '/projetos']].map((s) => h('a', { class: 'card stat', href: s[2], style: 'text-decoration:none;color:inherit' }, h('b', null, s[1]), s[0]))),
+    h('p', { class: 'eyebrow' }, 'Área do aluno'), h('h1', null, `Olá, ${u.nome.split(' ')[0]}.`), h('p', { class: 'sub' }, 'Organize seus estudos e acompanhe suas atividades.'),
+    h('div', { class: 'hero' }, h('div', null, h('div', { class: 'ey' }, 'TechFatec'), h('h2', null, 'Continue avançando nos seus estudos.'), h('p', null, `Você tem ${pend.length} atividade${pend.length === 1 ? '' : 's'} pendente${pend.length === 1 ? '' : 's'} e ${prox.length} compromisso${prox.length === 1 ? '' : 's'}.`)), h('a', { class: 'btn', href: A + '/atividades' }, 'Ver agora →')),
+    h('div', { class: 'stats' }, [['Meus grupos', gs.length, 'neste semestre', A + '/grupos'], ['Compromissos', prox.length, 'próximos eventos', A + '/agenda'], ['Atividades pendentes', pend.length, 'aguardando entrega', A + '/atividades'], ['Projetos', DB.projetos.filter((p) => gs.includes((DB.grupos.find((g) => g.nome === p.grupo) || {}).id)).length, 'em andamento', A + '/projetos']].map((s) => h('a', { class: 'card stat', href: s[3] }, h('span', null, s[0]), h('b', null, s[1]), h('small', null, s[2])))),
     h('div', { class: 'two' },
       h('div', { class: 'card' }, h('h2', null, 'Atividades recentes'), h('ul', { class: 'list' }, DB.atividades.slice(0, 3).map((a) => h('li', null, h('div', null, h('div', { class: 't' }, a.titulo), h('div', { class: 'm' }, `${a.disciplina} · prazo ${fmt(a.prazo)}`)), h('a', { class: 'btn sm', href: `${A}/atividades/${a.id}` }, entrega(a) ? 'Ver' : 'Acessar'))))),
       h('div', { class: 'card' }, h('h2', null, 'Próximos compromissos'), h('ul', { class: 'list' }, prox.map((e) => h('li', null, h('div', null, h('div', { class: 't' }, e.titulo), h('div', { class: 'm' }, `${fmt(e.data)} · ${e.hora}`)))), !prox.length && h('li', null, 'Nenhum compromisso.'))))]);
@@ -312,8 +337,8 @@ function proximos() {
   return ev.filter((e) => e.data >= hoje()).sort((a, b) => a.data.localeCompare(b.data));
 }
 function vGrupos() {
-  return shell('grupos', [['Início', A], ['Explorar grupos']], [h('p', { class: 'eyebrow' }, 'Comunidade'), h('h1', null, 'Explorar grupos'), h('p', { class: 'sub' }, 'Participe e aprenda em grupos orientados.'),
-    h('div', { class: 'grid' }, DB.grupos.map((g) => h('article', { class: 'card img' }, h('span', { class: 'tag' + (membro(g.id) ? ' ok' : '') }, membro(g.id) ? 'Você participa' : g.status), h('h3', null, g.nome), h('p', { class: 'm' }, `Prof. ${g.professor} · ${ativos(g)} participantes`), h('a', { class: 'btn sm', href: `${A}/grupos/${g.id}` }, 'Ver grupo'))))]);
+  return shell('grupos', [['Início', A], ['Explorar grupos']], [h('p', { class: 'eyebrow' }, 'Colaboração'), h('h1', null, 'Explorar grupos'), h('p', { class: 'sub' }, 'Encontre espaços para estudar e colaborar.'),
+    h('div', { class: 'grid g3' }, DB.grupos.map((g, i) => gcard(g, `${A}/grupos/${g.id}`, 'Ver grupo', i, membro(g.id))))]);
 }
 function vGrupo(id) {
   const g = grupo(id); if (!g) return vNotFound();
@@ -324,14 +349,14 @@ function vGrupo(id) {
   } }] });
   const participar = () => { (DB.membroDe[S.uid] = DB.membroDe[S.uid] || []).push(id); g.participantes.push({ nome: me().nome, curso: 'SI', situacao: 'Ativo' }); save(); render(); toast('Você agora participa deste grupo.'); };
   return shell('grupos', [['Início', A], ['Explorar grupos', A + '/grupos'], ['Detalhes do grupo']], [
-    h('p', { class: 'eyebrow' }, 'Grupo de estudos'), h('h1', null, g.nome),
+    h('div', { class: 'hero' }, h('div', null, h('span', { class: 'chip w' }, g.status), h('h1', null, g.nome), h('p', null, `Prof. ${g.professor} · ${ativos(g)} participantes`)), mem ? h('button', { class: 'btn', type: 'button', onclick: sair }, 'Sair do grupo') : h('button', { class: 'btn', type: 'button', onclick: participar }, 'Participar do grupo')),
     h('div', { class: 'alert info' }, mem ? 'Você já participa deste grupo e receberá as próximas atualizações.' : 'Você ainda não participa deste grupo.'),
-    h('p', null, g.descricao),
+    h('div', { class: 'card' }, h('h3', null, 'Sobre o grupo'), h('p', { class: 'm2' }, g.descricao)),
     h('div', { class: 'stats' }, [['Professor responsável', g.professor], ['Participantes', ativos(g)], ['Encontro', g.encontro], ['Local', g.local]].map((s) => h('div', { class: 'card' }, h('small', { class: 'm' }, s[0]), h('div', { class: 't', style: 'font-weight:700' }, s[1])))),
     h('h3', null, 'Conteúdos abordados'), h('p', { class: 'row' }, g.topicos.map((t) => h('span', { class: 'tag' }, t))),
-    h('div', { class: 'two' }, h('div', { class: 'card' }, h('h3', null, 'Participantes'), h('ul', { class: 'list' }, g.participantes.map((p) => h('li', null, h('span', null, p.nome), h('span', { class: 'm' }, p.situacao))))),
+    h('div', { class: 'two' }, h('div', { class: 'card' }, h('h3', null, 'Participantes'), h('ul', { class: 'list' }, g.participantes.map((p) => h('li', null, h('div', { class: 'row' }, h('span', { class: 'av2' }, p.nome.split(' ').map((w) => w[0]).slice(0, 2).join('')), h('span', null, p.nome)), h('span', { class: 'm' }, p.situacao))))),
       h('div', { class: 'card' }, h('h3', null, 'Materiais do grupo'), h('ul', { class: 'list' }, g.materiais.map((mid) => { const m = DB.materiais.find((x) => x.id === mid); return m && h('li', null, h('span', null, m.titulo), h('a', { class: 'btn sm', href: `${A}/materiais/${m.id}` }, 'Abrir')); }), !g.materiais.length && h('li', null, 'Nenhum material.')))),
-    h('div', { class: 'row', style: 'margin-top:16px' }, mem ? h('button', { class: 'btn red', type: 'button', onclick: sair }, 'Sair do grupo') : h('button', { class: 'btn pri', type: 'button', onclick: participar }, 'Participar do grupo'), h('a', { class: 'btn', href: A + '/grupos' }, 'Voltar'))],
+    h('div', { class: 'row', style: 'margin-top:16px' }, h('a', { class: 'btn', href: A + '/grupos' }, 'Voltar'))],
   [A + '/grupos', 'Explorar grupos']);
 }
 function vAgenda() {
@@ -363,8 +388,8 @@ function vMaterial(id) {
     h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn pri', type: 'button', onclick: () => toast('Download demonstrativo: nenhum arquivo real é gerado.') }, 'Baixar material'))], [A + '/materiais', 'Materiais']);
 }
 function vAtividades() {
-  return shell('atividades', [['Início', A], ['Atividades']], [h('p', { class: 'eyebrow' }, 'Conteúdo acadêmico'), h('h1', null, 'Atividades'), h('p', { class: 'sub' }, 'Consulte as atividades e faça suas entregas.'),
-    h('div', { class: 'card' }, h('ul', { class: 'list' }, DB.atividades.map((a) => h('li', null, h('div', null, h('div', { class: 't' }, a.titulo), h('div', { class: 'm' }, `${a.disciplina} · entrega até ${fmt(a.prazo)}`)), h('div', { class: 'row' }, h('span', { class: 'tag ' + (entrega(a) ? 'ok' : 'warn') }, entrega(a) ? 'Entregue' : 'Pendente'), h('a', { class: 'btn sm', href: `${A}/atividades/${a.id}` }, 'Acessar'))))))]);
+  return shell('atividades', [['Início', A], ['Atividades']], [h('p', { class: 'eyebrow' }, 'Conteúdo acadêmico'), h('h1', null, 'Atividades'), h('p', { class: 'sub' }, 'Consulte os recursos disponíveis e seu contexto.'),
+    h('div', { class: 'card' }, h('ul', { class: 'list' }, DB.atividades.map((a) => h('li', null, h('div', { class: 'row', style: 'flex:1;flex-wrap:nowrap' }, h('span', { class: 'ic' }, ico('materiais')), h('div', null, h('div', { class: 't' }, a.titulo), h('div', { class: 'm' }, a.disciplina))), h('div', { class: 'row' }, h('span', { class: 'm' }, 'Entrega ' + ABR(a.prazo)), h('span', { class: 'chip ' + (entrega(a) ? 'ok' : 'wn') }, entrega(a) ? 'Entregue' : 'Pendente'), h('a', { class: 'btn sm', href: `${A}/atividades/${a.id}` }, 'Acessar'))))))]);
 }
 function vAtividade(id) {
   const a = DB.atividades.find((x) => x.id === id); if (!a) return vNotFound();
@@ -425,14 +450,14 @@ const vFeedbackOk = () => shell('feedback', [['Início', A], ['Enviar feedback',
 /* ---------- professor ---------- */
 const P = '#/prof';
 function vProfDash() {
-  const u = me();
-  return shell('', null, [h('div', { class: 'hero' }, h('p', { class: 'eyebrow', style: 'color:#ddd' }, 'Painel do professor'), h('h2', null, `Olá, ${u.nome.split(' ')[0]}.`), h('p', null, 'Acompanhe grupos, atividades e projetos.'), h('a', { class: 'btn', href: P + '/atividades/nova' }, 'Nova atividade')),
-    h('div', { class: 'stats' }, [['Grupos', DB.grupos.filter((g) => g.professor === u.nome).length, P + '/grupos'], ['Atividades', DB.atividades.length, P + '/atividades'], ['Entregas a avaliar', DB.atividades.reduce((n, a) => n + a.entregas.filter((e) => e.nota == null).length, 0), P + '/atividades'], ['Projetos', DB.projetos.length, P + '/projetos'], ['Videoaulas', DB.videoaulas.length, P + '/videoaulas']].map((s) => h('a', { class: 'card stat', href: s[2], style: 'text-decoration:none;color:inherit' }, h('b', null, s[1]), s[0]))),
+  const u = me(); const aval = DB.atividades.reduce((n, a) => n + a.entregas.filter((e) => e.nota == null).length, 0);
+  return shell('', null, [h('p', { class: 'eyebrow' }, 'Área do professor'), h('h1', null, 'Dashboard acadêmico'), h('p', { class: 'sub' }, 'Gerencie conteúdos e acompanhe suas turmas.'), h('div', { class: 'hero' }, h('div', null, h('div', { class: 'ey' }, 'TechFatec'), h('h2', null, 'Tudo pronto para orientar suas turmas.'), h('p', null, `Você tem ${aval} entrega${aval === 1 ? '' : 's'} para avaliar.`)), h('a', { class: 'btn', href: P + '/atividades' }, 'Ver agora →')),
+    h('div', { class: 'stats' }, [['Grupos ativos', DB.grupos.filter((g) => g.professor === u.nome).length, 'neste semestre', P + '/grupos'], ['Atividades', DB.atividades.length, 'abertas e em revisão', P + '/atividades'], ['Entregas a avaliar', aval, 'aguardando nota', P + '/atividades'], ['Projetos', DB.projetos.length, 'em andamento', P + '/projetos']].map((s) => h('a', { class: 'card stat', href: s[3] }, h('span', null, s[0]), h('b', null, s[1]), h('small', null, s[2])))),
     h('div', { class: 'card' }, h('h2', null, 'Relatórios'), h('p', null, 'Consulte participação, entregas e engajamento por disciplina e período.'), h('a', { class: 'btn pri', href: P + '/relatorios' }, 'Abrir relatórios'))]);
 }
 function vProfGrupos() {
   return shell('grupos', [['Início', P], ['Gerenciar Grupos']], [h('div', { class: 'row between' }, h('div', null, h('p', { class: 'eyebrow' }, 'Comunidade'), h('h1', null, 'Gerenciar grupos')), h('a', { class: 'btn pri', href: P + '/grupos/novo' }, 'Novo grupo')),
-    h('div', { class: 'grid' }, DB.grupos.map((g) => h('article', { class: 'card img' }, h('span', { class: 'tag' }, g.status), h('h3', null, g.nome), h('p', { class: 'm' }, `Prof. ${g.professor} · ${ativos(g)} participantes`), h('a', { class: 'btn sm', href: `${P}/grupos/${g.id}` }, 'Gerenciar grupo'))))]);
+    h('div', { class: 'grid g3' }, DB.grupos.map((g, i) => gcard(g, `${P}/grupos/${g.id}`, 'Gerenciar grupo', i, false)))]);
 }
 function grupoForm(g) {
   const novo = !g;
