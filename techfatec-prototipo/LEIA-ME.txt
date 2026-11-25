@@ -1,0 +1,33 @@
+TECHFATEC – PROTÓTIPO NAVEGÁVEL (HTML, CSS, JavaScript e banco JSON)
+Dados fictícios. Nenhum dado real é usado ou enviado.
+
+COMO ABRIR
+1) Dê dois cliques em index.html (funciona direto no navegador), ou
+2) Para usar o banco data/db.json via servidor local: execute iniciar.bat (Windows) ou ./iniciar.sh (Linux/Mac)
+   e abra http://localhost:8080
+   (Ao abrir por duplo clique, o navegador bloqueia a leitura do JSON; o protótipo usa então a cópia embutida em js/data.js.)
+
+ACESSOS DE DEMONSTRAÇÃO (senha: demo123)
+  Aluno:     thiago.santos@fatec.sp.gov.br
+  Professor: camila.souza@fatec.sp.gov.br
+  Na tela de login há botões "Preencher como aluno/professor".
+
+ROTEIRO SUGERIDO PARA APRESENTAR
+  Aluno: login > clicar no logotipo (volta ao início) > Explorar grupos > Detalhes do grupo > Sair do grupo (cancelar e depois confirmar)
+         > Atividades > entrega (sem arquivo mostra o erro) > Agenda (navegar entre meses) > Videoaulas > Meus agentes > Enviar feedback
+         > Sair da conta (confirmação).
+  Professor: login > Gerenciar grupos (novo, gerenciar, editar) > Gerenciar atividades (nova, avaliar entrega, criar cópia)
+         > Materiais (publicar, editar, remover) > Publicar videoaula (confirmação, editar, excluir) > Relatórios (filtros e exportar CSV).
+  Recursos globais: breadcrumb e botão Voltar, busca, notificações, botão A (fonte e contraste), botão ? (assistente), rodapé (4 janelas),
+         menu responsivo (reduza a janela para ver tablet e smartphone).
+
+BARRA AMARELA (topo)
+  "Simular falha": faz a entrega de atividade, o player de vídeo e a publicação de videoaula mostrarem a mensagem de erro.
+  "Restaurar dados de demonstração": apaga as alterações salvas no navegador e volta aos dados originais.
+
+ARQUIVOS
+  index.html · css/styles.css · js/app.js · js/data.js (cópia do banco) · data/db.json (banco) · assets/ (logos)
+  As alterações feitas durante a apresentação ficam salvas no navegador (localStorage), não no db.json.
+
+LIMITES (protótipo demonstrativo)
+  Não valida credenciais reais, não envia arquivos nem e-mails, e os agentes de estudo e o assistente dão respostas demonstrativas.
